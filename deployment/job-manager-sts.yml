@@ -36,6 +36,8 @@ spec:
           name: blob
         - containerPort: 8081
           name: ui
+        - containerPort: 9249
+          name: prom
         livenessProbe:
           httpGet:
             path: /overview

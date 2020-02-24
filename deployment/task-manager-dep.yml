@@ -40,6 +40,8 @@ spec:
           name: rpc
         - containerPort: 6123
           name: mine
+        - containerPort: 9249
+          name: prom
         volumeMounts:
         - name: flink-config-volume
           mountPath: /opt/flink/conf/
