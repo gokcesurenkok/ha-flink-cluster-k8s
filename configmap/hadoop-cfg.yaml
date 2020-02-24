@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hadoop-config
+  labels:
+    app: flink
+data:
+  core-site.xml: |+
+    <configuration>
+    <property>       
+       <name>fs.default.name</name>       
+       <value>hdfs://$hdfs-hostname:port</value>    
+       <description>Enter your NameNode hostname</description>
+    </property>
+    </configuration>
+  hdfs-site.xml: |+
+    <configuration>
+    <property>
+        <name>dfs.datanode.use.datanode.hostname</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>dfs.client.use.datanode.hostname</name>
+        <value>true</value>
+    </property>
+    </configuration>

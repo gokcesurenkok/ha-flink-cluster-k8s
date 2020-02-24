@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: flink
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      hostAliases:
+      - ip: "hdfs-node-ip"
+        hostnames:
+        - "hdfs-node-hostname"
+      containers:
+      - name: taskmanager
+        image: gokcesurenkok/flink_hadoop_prometheus:v1.9-scala_2.12
+        workingDir: /opt/flink
+        command: ["/bin/bash", "-c", "$FLINK_HOME/bin/taskmanager.sh start; \
+          while :;
+          do
+            if [[ -f $(find log -name '*taskmanager*.log' -print -quit) ]];
+              then tail -F -n +1 log/*taskmanager*.log;
+            fi;
+          done"]
+        env:
+        - name: TASK_MANAGER_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        ports:
+        - containerPort: 6121
+          name: data
+        - containerPort: 6122
+          name: rpc
+        - containerPort: 6123
+          name: mine
+        volumeMounts:
+        - name: flink-config-volume
+          mountPath: /opt/flink/conf/
+        - name: hadoop-config-volume
+          mountPath: /etc/hadoop
+        livenessProbe:
+          tcpSocket:
+            port: 6122
+          initialDelaySeconds: 30
+          periodSeconds: 60
+      volumes:
+      - name: flink-config-volume
+        configMap:
+          name: flink-config
+          items:
+          - key: flink-conf.yaml
+            path: flink-conf.yaml
+          - key: log4j.properties
+            path: log4j.properties
+      - name: hadoop-config-volume
+        configMap:
+          name: hadoop-config
+          items:
+          - key: core-site.xml
+            path: core-site.xml
+          - key: hdfs-site.xml
+            path: hdfs-site.xml

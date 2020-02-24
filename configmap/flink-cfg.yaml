@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flink-config
+  labels:
+    app: flink
+data:
+  flink-conf.yaml: |+
+    web.submit.enable: false
+
+    jobmanager.rpc.address: flink-jobmanager-0.flink.default.svc.cluster.local
+    
+    taskmanager.numberOfTaskSlots: 1
+
+    blob.server.port: 6124
+    jobmanager.rpc.port: 6123
+    taskmanager.rpc.port: 6122
+
+    jobmanager.heap.size: 1024m
+    taskmanager.heap.size: 3072m
+
+    akka.watch.heartbeat.interval: 10000s
+    akka.watch.heartbeat.pause: 60000s
+
+    metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusReporter
+
+    high-availability: zookeeper
+    high-availability.zookeeper.quorum: $zookeper-ip:port
+    high-availability.zookeeper.path.root: /flink
+    high-availability.zookeeper.storageDir: hdfs://$hdfs-hostname/flink/zookeeper
+    high-availability.storageDir: hdfs://$hdfs-hostname/flink/recovery
+
+    high-availability.cluster-id: /flink-cluster
+
+    fs.hdfs.hadoopconf: /etc/hadoop
+  log4j.properties: |+
+    log4j.rootLogger=INFO, file
+
+    log4j.logger.akka=ERROR
+    log4j.logger.org.apache.kafka=ERROR
+    log4j.logger.org.apache.hadoop=ERROR
+    log4j.logger.org.apache.zookeeper=ERROR
+    log4j.logger.org.apache.flink.streaming.connectors.elasticsearch=OFF
+
+    log4j.appender.file=org.apache.log4j.RollingFileAppender
+    log4j.appender.file.encoding=UTF-8
+    log4j.appender.file.File=${log.file}
+    log4j.appender.file.MaxFileSize=64MB
+    log4j.appender.file.MaxBackupIndex=4
+
+    log4j.appender.file.layout=org.apache.log4j.PatternLayout
+    log4j.appender.file.layout.ConversionPattern={"SourceContext":"%c","@i":"%t","Application":"%F","@l":"%p", "@m":"%m","@t":"%d{yyyy-MM-dd HH:mm:ss,SSS}"}%n
+    
+    log4j.logger.org.apache.flink.shaded.akka.org.jboss.netty.channel.DefaultChannelPipeline=ERROR, file
